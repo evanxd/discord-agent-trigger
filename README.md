@@ -17,11 +17,11 @@ This project is a Discord bot that triggers an external agent to do tasks users 
 
 1. Create a `.env` file in the root of the project with the following content:
    ```
-   REDIS_HOST=your-redis-host
-   REDIS_PORT=your-redis-port
-   REDIS_USERNAME=your-redis-username
-   REDIS_PASSWORD=your-redis-password
-   DISCORD_TOKEN=your-discord-bot-token
+   REDIS_HOST=127.0.0.1
+   REDIS_PORT=6379
+   REDIS_USERNAME=default
+   REDIS_PASSWORD=YOUR_REDIS_PASSWORD
+   DISCORD_BOT_TOKEN=YOUR_DISCORD_BOT_TOKEN
    ```
 2. Replace the placeholder values with your actual credentials.
 

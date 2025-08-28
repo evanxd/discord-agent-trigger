@@ -56,4 +56,4 @@ discordClient.on("messageCreate", async (message) => {
   }
 });
 
-await discordClient.login(process.env.DISCORD_TOKEN);
+await discordClient.login(process.env.DISCORD_BOT_TOKEN);
