@@ -1,4 +1,4 @@
-# 🤖 Discord Agent Trigger
+# Discord Agent Trigger
 
 This project is a Node.js and TypeScript Discord bot that triggers an external agent to do tasks users request. It uses Redis to queue tasks and retrieve results.
 
@@ -50,4 +50,4 @@ Contributions are welcome! Please feel free to submit a pull request.
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+This project is licensed under the [MIT License](LICENSE).
