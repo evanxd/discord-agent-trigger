@@ -1,20 +1,8 @@
 import { createClient, RedisClientType } from "redis";
 import { Message } from "discord.js";
-import dotenv from "dotenv";
 
-dotenv.config();
-
-const REDIS_OPTIONS = {
-  username: process.env.REDIS_USERNAME,
-  password: process.env.REDIS_PASSWORD,
-  socket: {
-    host: process.env.REDIS_HOST,
-    port: Number(process.env.REDIS_PORT),
-  }
-}
-
-async function generateClient(): Promise<RedisClientType> {
-  const client: RedisClientType = createClient(REDIS_OPTIONS);
+async function generateClient(options): Promise<RedisClientType> {
+  const client: RedisClientType = createClient(options);
   client.on("error", (err) => console.error("Redis Client Error", err));
   await client.connect();
   return client;

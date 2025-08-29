@@ -1,8 +1,19 @@
 import { Client, GatewayIntentBits, TextChannel } from "discord.js";
 import { addTask, generateClient, waitForResults } from "./redis-helper.js";
+import dotenv from "dotenv";
+dotenv.config();
 
-const redisTaskClient = await generateClient();
-const redisResultClient = await generateClient();
+const REDIS_OPTIONS = {
+  username: process.env.REDIS_USERNAME,
+  password: process.env.REDIS_PASSWORD,
+  socket: {
+    host: process.env.REDIS_HOST,
+    port: Number(process.env.REDIS_PORT),
+  }
+}
+
+const redisTaskClient = await generateClient(REDIS_OPTIONS);
+const redisResultClient = await generateClient(REDIS_OPTIONS);
 const discordClient = new Client({
   intents: [
     GatewayIntentBits.Guilds,
