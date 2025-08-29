@@ -1,6 +1,7 @@
 import { Client, GatewayIntentBits, TextChannel } from "discord.js";
 import { addTask, generateClient, waitForResults } from "./redis-helper.js";
 import dotenv from "dotenv";
+
 dotenv.config();
 
 const REDIS_OPTIONS = {
