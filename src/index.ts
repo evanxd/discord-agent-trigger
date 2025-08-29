@@ -14,10 +14,8 @@ const discordClient = new Client({
 discordClient.on("clientReady", () => {
   waitForResults(redisResultClient, async (message) => {
     const { result, channelId } = message;
-    if (result && channelId) {
-      const channel = await discordClient.channels.fetch(channelId) as TextChannel;
-      await channel.send(result);
-    }
+    const channel = await discordClient.channels.fetch(channelId) as TextChannel;
+    await channel.send(result);
   });
 });
 
