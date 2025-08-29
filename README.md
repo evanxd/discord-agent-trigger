@@ -45,7 +45,7 @@ An external agent (not included in this project) is expected to be listening to 
 
 The bot listens to the `discord:results` stream. When a result is received, it's posted back to the Discord channel where the original request was made.
 
-## 🙏 Contributing
+## 🙌 Contributing
 
 Contributions are welcome! Please feel free to submit a pull request.
 
