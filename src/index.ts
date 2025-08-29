@@ -1,7 +1,7 @@
 import { Client as DiscordClient, GatewayIntentBits, TextChannel } from "discord.js";
 import { RedisClientType, createClient } from "redis";
 import dotenv from "dotenv";
-import { waitForTaskResults } from "./task-result-listener.js";
+import { waitForResults } from "./redis-helper.js";
 
 dotenv.config();
 
@@ -30,7 +30,7 @@ await redisTaskClient.connect();
 await redisResultClient.connect();
 
 discordClient.on("clientReady", () => {
-  waitForTaskResults(redisResultClient, async (message) => {
+  waitForResults(redisResultClient, async (message) => {
     const { result, channelId } = message;
     if (result && channelId) {
       const channel = await discordClient.channels.fetch(channelId) as TextChannel;

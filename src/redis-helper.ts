@@ -1,6 +1,6 @@
 import { RedisClientType } from "redis";
 
-export async function waitForTaskResults(
+async function waitForResults(
   client: RedisClientType,
   callback: Function,
 ) {
@@ -41,3 +41,5 @@ async function cleanupTaskData(
     ),
   ]);
 }
+
+export { waitForResults }
