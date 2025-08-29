@@ -40,7 +40,10 @@ discordClient.on("clientReady", () => {
 });
 
 discordClient.on("messageCreate", async (message) => {
-  if (message.author.bot) return;
+  if (message.author.bot ||
+      !(message.channel instanceof TextChannel) ||
+      message.channel.name !== process.env.DISCORD_BOT_ALLOWED_CHANNEL_NAME
+  ) return;
 
   try {
     const taskId = `${Date.now()}-0`;
