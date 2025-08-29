@@ -1,4 +1,22 @@
 import { RedisClientType } from "redis";
+import { Message } from "discord.js";
+
+async function addTask(client: RedisClientType, message: Message) {
+  try {
+    const taskId = `${Date.now()}-0`;
+    const { channelId } = message;
+    await client.xAdd("discord:tasks", taskId, {
+      taskId,
+      task: message.content,
+      sender: message.author.globalName,
+      ledgerId: `discord:${channelId}`,
+      channelId,
+    });
+  } catch (error) {
+    console.error("Error sending task to Redis stream:", error);
+    message.reply("Sorry, there was an error processing your request.");
+  }
+}
 
 async function waitForResults(
   client: RedisClientType,
@@ -31,15 +49,9 @@ async function cleanupTaskData(
   resultId: string
 ) {
   await Promise.all([
-    client.xDel(
-      "discord:tasks",
-      taskId,
-    ),
-    client.xDel(
-      "discord:results",
-      resultId,
-    ),
+    client.xDel("discord:tasks", taskId),
+    client.xDel("discord:results", resultId),
   ]);
 }
 
-export { waitForResults }
+export { addTask, waitForResults }

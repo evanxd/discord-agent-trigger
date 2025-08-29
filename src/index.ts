@@ -1,7 +1,7 @@
+import { createClient, RedisClientType } from "redis";
 import { Client as DiscordClient, GatewayIntentBits, TextChannel } from "discord.js";
-import { RedisClientType, createClient } from "redis";
 import dotenv from "dotenv";
-import { waitForResults } from "./redis-helper.js";
+import { addTask, waitForResults } from "./redis-helper.js";
 
 dotenv.config();
 
@@ -44,21 +44,7 @@ discordClient.on("messageCreate", async (message) => {
       !(message.channel instanceof TextChannel) ||
       message.channel.name !== process.env.DISCORD_BOT_ALLOWED_CHANNEL_NAME
   ) return;
-
-  try {
-    const taskId = `${Date.now()}-0`;
-    const { channelId } = message;
-    await redisTaskClient.xAdd("discord:tasks", taskId, {
-      taskId,
-      task: message.content,
-      sender: message.author.globalName,
-      ledgerId: `discord:${channelId}`,
-      channelId,
-    });
-  } catch (error) {
-    console.error("Error sending task to Redis stream:", error);
-    message.reply("Sorry, there was an error processing your request.");
-  }
+  await addTask(redisTaskClient, message);
 });
 
 await discordClient.login(process.env.DISCORD_BOT_TOKEN);
