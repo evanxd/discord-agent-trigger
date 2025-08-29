@@ -47,11 +47,13 @@ discordClient.on("messageCreate", async (message) => {
 
   try {
     const taskId = `${Date.now()}-0`;
+    const { channelId } = message;
     await redisTaskClient.xAdd("discord:tasks", taskId, {
       taskId,
       task: message.content,
       sender: message.author.globalName,
-      channelId: message.channelId,
+      ledgerId: `discord:${channelId}`,
+      channelId,
     });
   } catch (error) {
     console.error("Error sending task to Redis stream:", error);
