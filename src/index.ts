@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, TextChannel } from "discord.js";
+import { Client, GatewayIntentBits, Message, TextChannel } from "discord.js";
 import { RedisClientType } from "redis";
 import {
   addTask,
@@ -22,13 +22,12 @@ const REDIS_OPTIONS = {
 async function main() {
   const redisTaskClient = await generateClient(REDIS_OPTIONS);
   const redisResultClient = await generateClient(REDIS_OPTIONS);
-
   const discordClient = new Client({
     intents: [
       GatewayIntentBits.Guilds,
       GatewayIntentBits.GuildMessages,
       GatewayIntentBits.MessageContent,
-    ],
+    ]
   });
 
   discordClient.once("clientReady", client => {
@@ -36,11 +35,7 @@ async function main() {
   });
 
   discordClient.on("messageCreate", async (message) => {
-    if (
-      message.author.bot ||
-      !(message.channel instanceof TextChannel) ||
-      message.channel.name !== process.env.DISCORD_BOT_ALLOWED_CHANNEL_NAME
-    ) {
+    if (isInvalidMessage(message)) {
       return;
     }
 
@@ -51,6 +46,20 @@ async function main() {
       console.error("Failed to add task:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
       await message.reply(`Could not process your request: ${errorMessage}`);
+    }
+  });
+
+  discordClient.on("messageDelete", async (message) => {
+    if (!(message instanceof Message) || isInvalidMessage(message)) {
+      return;
+    }
+
+    try {
+      await addTask(redisTaskClient, message, "Delete this expense log");
+    } catch (error) {
+      console.error("Failed to add deletion task:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+      await message.channel.send(`Could not process the deletion request: ${errorMessage}`);
     }
   });
 
@@ -85,6 +94,14 @@ async function listenForResults(
   }
 }
 
-main().catch((error) => {
-  console.error("Unhandled error:", error);
+function isInvalidMessage(message: Message): boolean {
+  return (
+    message.author.bot ||
+    !(message.channel instanceof TextChannel) ||
+    message.channel.name !== process.env.DISCORD_BOT_ALLOWED_CHANNEL_NAME
+  );
+}
+
+main().catch((e) => {
+  console.error("Unhandled error:", e);
 });

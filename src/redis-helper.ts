@@ -17,7 +17,7 @@ interface TaskRequestMessage {
     groupMembers: string;
     ledgerId: string;
     channelId: string;
-    messageId?: string;
+    messageId: string;
   };
 }
 
@@ -47,24 +47,26 @@ export async function generateClient(options: RedisClientOptions): Promise<Redis
  * Adds a new task to the tasks stream.
  * @param client - The Redis client instance.
  * @param message - The discord.js Message that triggered the task.
+ * @param instruction - Optional instruction to override the message content.
  * @throws Throws an error if the task cannot be added or if the channel is not a TextChannel.
  */
-export async function addTask(client: RedisClientType, message: Message): Promise<void> {
+export async function addTask(client: RedisClientType, message: Message, instruction?: string): Promise<void> {
   if (!(message.channel instanceof TextChannel)) {
     throw new Error("Tasks can only be initiated from server text channels.");
   }
 
-  const { channel, channelId } = message;
+  const { id: messageId, channel, channelId } = message;
   const requestId = `${Date.now()}-0`;
   const request: TaskRequestMessage = {
     id: requestId,
     message: {
       requestId,
-      instruction: message.content,
+      instruction: instruction || message.content,
       sender: message.author.username,
       groupMembers: JSON.stringify(channel.members.map((m) => m.user.username)),
       ledgerId: `discord:${channelId}`,
       channelId: channelId,
+      messageId
     }
   };
 
