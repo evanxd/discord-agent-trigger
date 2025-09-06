@@ -42,9 +42,9 @@ async function main() {
     try {
       await addTask(redisTaskClient, message);
       await message.react("🤖");
-    } catch (error) {
-      console.error("Failed to add task:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+    } catch (e) {
+      console.error("Failed to add task:", e);
+      const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
       await message.reply(`Could not process your request: ${errorMessage}`);
     }
   });
@@ -56,9 +56,9 @@ async function main() {
 
     try {
       await addTask(redisTaskClient, message, "Delete this expense log");
-    } catch (error) {
-      console.error("Failed to add deletion task:", error);
-      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
+    } catch (e) {
+      console.error("Failed to add deletion task:", e);
+      const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
       await message.channel.send(`Could not process the deletion request: ${errorMessage}`);
     }
   });
@@ -88,8 +88,8 @@ async function listenForResults(
       }
 
       await cleanupProcessedTask(taskClient, requestId, resultId);
-    } catch (error) {
-      console.error("Error processing result:", error);
+    } catch (e) {
+      console.error("Error processing result:", e);
     }
   }
 }
