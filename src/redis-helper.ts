@@ -26,6 +26,7 @@ interface TaskResultMessage {
   message: {
     result: string;
     channelId: string;
+    messageId: string;
     requestId: string;
   };
 }

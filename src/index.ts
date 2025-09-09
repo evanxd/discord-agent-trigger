@@ -73,16 +73,21 @@ async function listenForResults(
 ) {
   for await (const result of getResults(resultClient)) {
     try {
-      const { message, id: resultId } = result;
-      const { result: resultText, channelId, requestId } = message;
+      const { id: resultId, message: redisMessage } = result;
+      const { result: resultText, channelId, messageId, requestId } = redisMessage;
 
-      if (!resultText || !channelId || !requestId) {
+      if (!resultText || !channelId || !messageId || !requestId) {
         continue;
       }
-
       const channel = await discordClient.channels.fetch(channelId);
       if (channel instanceof TextChannel) {
-        await channel.send(resultText);
+        await channel.send({
+          content: resultText,
+          reply: {
+            messageReference: messageId,
+            failIfNotExists: false,
+          },
+        });
       } else {
         console.warn(`Channel ${channelId} is not a text channel.`);
       }
