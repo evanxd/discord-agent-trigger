@@ -5,7 +5,8 @@ import {
   cleanupProcessedTask,
   generateClient,
   getResults,
-} from "./redis-helper.js";
+  to,
+} from "./utils.js";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -30,8 +31,11 @@ async function main() {
     ]
   });
 
-  discordClient.once("clientReady", client => {
-    listenForResults(client, redisResultClient, redisTaskClient);
+  discordClient.once("clientReady", async (client) => {
+    const [err] = await to(listenForResults(client, redisResultClient, redisTaskClient));
+    if (err) {
+      console.error("Error processing result:", err);
+    }
   });
 
   discordClient.on("messageCreate", async (message) => {
@@ -39,13 +43,13 @@ async function main() {
       return;
     }
 
-    try {
-      await addTask(redisTaskClient, message);
-      await message.react("🤖");
-    } catch (e) {
-      console.error("Failed to add task:", e);
-      const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
-      await message.reply(`Could not process your request: ${errorMessage}`);
+    const [err] = await to(
+      addTask(redisTaskClient, message).then(() => message.react("🤖"))
+    );
+
+    if (err) {
+      console.error("Failed to add task:", err);
+      await message.reply(`Could not process your request: ${err.message}`);
     }
   });
 
@@ -54,12 +58,13 @@ async function main() {
       return;
     }
 
-    try {
-      await addTask(redisTaskClient, message, "Delete this expense log");
-    } catch (e) {
-      console.error("Failed to add deletion task:", e);
-      const errorMessage = e instanceof Error ? e.message : "An unknown error occurred.";
-      await message.channel.send(`Could not process the deletion request: ${errorMessage}`);
+    const [err] = await to(
+      addTask(redisTaskClient, message, "Delete this expense log")
+    );
+
+    if (err) {
+      console.error("Failed to add deletion task:", err);
+      await message.channel.send(`Could not process the deletion request: ${err.message}`);
     }
   });
 
@@ -72,30 +77,28 @@ async function listenForResults(
   taskClient: RedisClientType
 ) {
   for await (const result of getResults(resultClient)) {
-    try {
-      const { id: resultId, message: redisMessage } = result;
-      const { result: resultText, channelId, messageId, requestId } = redisMessage;
-
-      if (!resultText || !channelId || !messageId || !requestId) {
-        continue;
-      }
-      const channel = await discordClient.channels.fetch(channelId);
-      if (channel instanceof TextChannel) {
-        await channel.send({
-          content: resultText,
-          reply: {
-            messageReference: messageId,
-            failIfNotExists: false,
-          },
-        });
-      } else {
-        console.warn(`Channel ${channelId} is not a text channel.`);
-      }
-
-      await cleanupProcessedTask(taskClient, requestId, resultId);
-    } catch (e) {
-      console.error("Error processing result:", e);
+    const { id: resultId, message: redisMessage } = result;
+    const { result: resultText, channelId, messageId, requestId } = redisMessage;
+    if (!channelId || !messageId || !requestId) {
+      continue;
     }
+
+    const channel = await discordClient.channels.fetch(channelId);
+    if (!(channel instanceof TextChannel)) {
+      return;
+    }
+
+    if (resultText) {
+      await channel.send({
+        content: resultText,
+        reply: {
+          messageReference: messageId,
+          failIfNotExists: false,
+        },
+      });
+    }
+
+    await cleanupProcessedTask(taskClient, requestId, resultId);
   }
 }
 
@@ -107,6 +110,4 @@ function isInvalidMessage(message: Message): boolean {
   );
 }
 
-main().catch((e) => {
-  console.error("Unhandled error:", e);
-});
+main().catch((e) => { console.error("Unhandled error:", e); });
