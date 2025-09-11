@@ -21,7 +21,7 @@ const REDIS_OPTIONS = {
 };
 
 async function main() {
-  const redisTaskClient = await generateClient(REDIS_OPTIONS);
+  const redisRequestClient = await generateClient(REDIS_OPTIONS);
   const redisResultClient = await generateClient(REDIS_OPTIONS);
   const discordClient = new Client({
     intents: [
@@ -32,10 +32,10 @@ async function main() {
   });
 
   discordClient.once("clientReady", async (client) => {
-    const [err] = await to(listenForResults(client, redisResultClient, redisTaskClient));
+    const [err] = await to(listenForResults(client, redisResultClient, redisRequestClient));
 
     if (err) {
-      console.error("Error processing result:", err);
+      console.error("Error in result listening loop:", err);
     }
   });
 
@@ -45,7 +45,7 @@ async function main() {
     }
 
     const [err] = await to(
-      addTask(redisTaskClient, message).then(() => message.react("🤖"))
+      addTask(redisRequestClient, message).then(() => message.react("🤖"))
     );
 
     if (err) {
@@ -60,7 +60,7 @@ async function main() {
     }
 
     const [err] = await to(
-      addTask(redisTaskClient, message, "Delete this expense log")
+      addTask(redisRequestClient, message, "Delete this expense log")
     );
 
     if (err) {
@@ -99,7 +99,10 @@ async function listenForResults(
       });
     }
 
-    await cleanupProcessedTask(taskClient, requestId, resultId);
+    const [err] = await to(cleanupProcessedTask(taskClient, requestId, resultId));
+    if (err) {
+      console.error(`Failed to cleanup Redis streams for request ${requestId} and result ${resultId}`, err);
+    }
   }
 }
 
