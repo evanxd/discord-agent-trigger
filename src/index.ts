@@ -33,6 +33,7 @@ async function main() {
 
   discordClient.once("clientReady", async (client) => {
     const [err] = await to(listenForResults(client, redisResultClient, redisTaskClient));
+
     if (err) {
       console.error("Error processing result:", err);
     }
