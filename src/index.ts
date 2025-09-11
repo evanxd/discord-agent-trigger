@@ -1,10 +1,9 @@
-import { Client, GatewayIntentBits, Message, TextChannel } from "discord.js";
-import { RedisClientType } from "redis";
+import { Client, GatewayIntentBits, Message } from "discord.js";
 import {
   addTask,
-  cleanupProcessedTask,
   generateClient,
-  getResults,
+  isInvalidMessage,
+  listenForResults,
   to,
 } from "./utils.js";
 import dotenv from "dotenv";
@@ -70,48 +69,6 @@ async function main() {
   });
 
   await discordClient.login(process.env.DISCORD_BOT_TOKEN);
-}
-
-async function listenForResults(
-  discordClient: Client,
-  resultClient: RedisClientType,
-  taskClient: RedisClientType
-) {
-  for await (const result of getResults(resultClient)) {
-    const { id: resultId, message: redisMessage } = result;
-    const { result: resultText, channelId, messageId, requestId } = redisMessage;
-    if (!channelId || !messageId || !requestId) {
-      continue;
-    }
-
-    const channel = await discordClient.channels.fetch(channelId);
-    if (!(channel instanceof TextChannel)) {
-      return;
-    }
-
-    if (resultText) {
-      await channel.send({
-        content: resultText,
-        reply: {
-          messageReference: messageId,
-          failIfNotExists: false,
-        },
-      });
-    }
-
-    const [err] = await to(cleanupProcessedTask(taskClient, requestId, resultId));
-    if (err) {
-      console.error(`Failed to cleanup Redis streams for request ${requestId} and result ${resultId}`, err);
-    }
-  }
-}
-
-function isInvalidMessage(message: Message): boolean {
-  return (
-    message.author.bot ||
-    !(message.channel instanceof TextChannel) ||
-    message.channel.name !== process.env.DISCORD_BOT_ALLOWED_CHANNEL_NAME
-  );
 }
 
 main().catch((e) => { console.error("Unhandled error:", e); });

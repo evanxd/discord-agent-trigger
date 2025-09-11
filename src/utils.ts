@@ -1,5 +1,5 @@
 import { createClient, RedisClientType, RedisClientOptions } from "redis";
-import { Message, TextChannel } from "discord.js";
+import { Client, Message, TextChannel } from "discord.js";
 
 const STREAM_REQUESTS = "discord:requests";
 const STREAM_RESULTS = "discord:results";
@@ -33,6 +33,7 @@ interface TaskResultMessage {
 
 /**
  * Creates and connects a Redis client.
+ *
  * @param options - Redis client options.
  * @returns A connected Redis client.
  * @throws Will throw an error if the initial connection fails.
@@ -46,6 +47,7 @@ export async function generateClient(options: RedisClientOptions): Promise<Redis
 
 /**
  * Adds a new task to the tasks stream.
+ *
  * @param client - The Redis client instance.
  * @param message - The discord.js Message that triggered the task.
  * @param instruction - Optional instruction to override the message content.
@@ -75,11 +77,87 @@ export async function addTask(client: RedisClientType, message: Message, instruc
 }
 
 /**
+ * A long-running process that listens for results from the Redis results stream,
+ * sends them to the appropriate Discord channel, and cleans up the processed tasks.
+ *
+ * @param discordClient - The Discord client instance.
+ * @param resultClient - The Redis client for reading results.
+ * @param taskClient - The Redis client for cleaning up tasks.
+ */
+export async function listenForResults(
+  discordClient: Client,
+  resultClient: RedisClientType,
+  taskClient: RedisClientType
+) {
+  for await (const result of getResults(resultClient)) {
+    const { id: resultId, message: redisMessage } = result;
+    const { result: resultText, channelId, messageId, requestId } = redisMessage;
+    if (!channelId || !messageId || !requestId) {
+      continue;
+    }
+
+    const channel = await discordClient.channels.fetch(channelId);
+    if (!(channel instanceof TextChannel)) {
+      return;
+    }
+
+    if (resultText) {
+      await channel.send({
+        content: resultText,
+        reply: {
+          messageReference: messageId,
+          failIfNotExists: false,
+        },
+      });
+    }
+
+    const [err] = await to(cleanupProcessedTask(taskClient, requestId, resultId));
+    if (err) {
+      console.error(`Failed to cleanup Redis streams for request ${requestId} and result ${resultId}`, err);
+    }
+  }
+}
+
+/**
+ * Wraps a promise to enable error handling without a try-catch block,
+ * inspired by the `await-to-js` library. This allows for a cleaner,
+ * functional approach to handling asynchronous operations that might fail.
+ *
+ * @template T The type of the resolved value of the promise.
+ * @param promise The promise to be wrapped.
+ * @returns A promise that always resolves to a tuple. If the original
+ *          promise resolves, the tuple is `[null, data]`. If it rejects,
+ *          the tuple is `[error, undefined]`.
+ */
+export function to<T>(promise: Promise<T>): Promise<[Error, undefined] | [null, T]> {
+  return promise
+    .then<[null, T]>((data) => [null, data])
+    .catch<[Error, undefined]>((err) => [err, undefined]);
+}
+
+/**
+ * Checks if a message should be ignored.
+ * A message is considered invalid if the author is a bot, the channel is not a text channel,
+ * or the channel name is not the one specified in the environment variables.
+ *
+ * @param message - The Discord message to check.
+ * @returns True if the message is invalid, false otherwise.
+ */
+export function isInvalidMessage(message: Message): boolean {
+  return (
+    message.author.bot ||
+    !(message.channel instanceof TextChannel) ||
+    message.channel.name !== process.env.DISCORD_BOT_ALLOWED_CHANNEL_NAME
+  );
+}
+
+/**
  * An async generator that yields results from the results stream as they become available.
  * It will block and wait for new messages, and automatically retries on error.
+ *
  * @param client - The Redis client instance.
  */
-export async function* getResults(
+async function* getResults(
   client: RedisClientType
 ): AsyncGenerator<TaskResultMessage> {
   let lastId = "0";
@@ -109,11 +187,12 @@ export async function* getResults(
 
 /**
  * Deletes a task from the tasks stream and its corresponding result from the results stream.
+ *
  * @param client - The Redis client instance.
  * @param requestId - The ID of the request message to delete.
  * @param resultId - The ID of the result message to delete.
  */
-export async function cleanupProcessedTask(
+async function cleanupProcessedTask(
   client: RedisClientType,
   requestId: string,
   resultId: string
@@ -122,21 +201,4 @@ export async function cleanupProcessedTask(
     client.xDel(STREAM_REQUESTS, requestId),
     client.xDel(STREAM_RESULTS, resultId),
   ]);
-}
-
-/**
- * Wraps a promise to enable error handling without a try-catch block,
- * inspired by the `await-to-js` library. This allows for a cleaner,
- * functional approach to handling asynchronous operations that might fail.
- *
- * @template T The type of the resolved value of the promise.
- * @param promise The promise to be wrapped.
- * @returns A promise that always resolves to a tuple. If the original
- *          promise resolves, the tuple is `[null, data]`. If it rejects,
- *          the tuple is `[error, undefined]`.
- */
-export function to<T>(promise: Promise<T>): Promise<[Error, undefined] | [null, T]> {
-  return promise
-    .then<[null, T]>((data) => [null, data])
-    .catch<[Error, undefined]>((err) => [err, undefined]);
 }
