@@ -1,8 +1,9 @@
-import { Client, GatewayIntentBits, Message } from "discord.js";
+import { Client, GatewayIntentBits, Message, TextChannel } from "discord.js";
 import dotenv from "dotenv";
 
 import {
   addTask,
+  fetchMessages,
   generateClient,
   isInvalidMessage,
   listenForResults,
@@ -33,6 +34,7 @@ async function main() {
   });
 
   discordClient.once("clientReady", async (client) => {
+    await fetchMessages(client);
     const [err] = await to(listenForResults(client, redisResultClient, redisRequestClient));
 
     if (err) {

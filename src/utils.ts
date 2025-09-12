@@ -152,6 +152,21 @@ export function isInvalidMessage(message: Message): boolean {
 }
 
 /**
+ * Fetches all messages from the allowed channel to ensure they are in the cache.
+ * This is useful for making sure that the bot can react to messages that were sent
+ * while it was offline.
+ *
+ * @param client - The Discord client instance.
+ */
+export async function fetchMessages(client: Client): Promise<void> {
+  const channel = client.channels.cache.find((c) =>
+    c instanceof TextChannel &&
+    c.name === process.env.DISCORD_BOT_ALLOWED_CHANNEL_NAME
+  );
+  await (channel as TextChannel).messages.fetch();
+}
+
+/**
  * An async generator that yields results from the results stream as they become available.
  * It will block and wait for new messages, and automatically retries on error.
  *
