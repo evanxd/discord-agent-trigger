@@ -1,4 +1,6 @@
 import { Client, GatewayIntentBits, Message } from "discord.js";
+import dotenv from "dotenv";
+
 import {
   addTask,
   generateClient,
@@ -6,7 +8,7 @@ import {
   listenForResults,
   to,
 } from "./utils.js";
-import dotenv from "dotenv";
+import { startServer } from "./server.js";
 
 dotenv.config();
 
@@ -71,4 +73,5 @@ async function main() {
   await discordClient.login(process.env.DISCORD_BOT_TOKEN);
 }
 
+startServer(Number(process.env.PORT) || undefined);
 main().catch((e) => { console.error("Unhandled error:", e); });

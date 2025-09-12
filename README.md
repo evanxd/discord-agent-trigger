@@ -17,14 +17,15 @@ This project is a Discord bot that triggers an external agent to do tasks users 
 
 1. Create a `.env` file in the root of the project with the following content:
    ```
+   DISCORD_BOT_ALLOWED_CHANNEL_NAME="YOUR_ALLOWED_CHANNEL_NAME"
+   DISCORD_BOT_TOKEN="YOUR_DISCORD_BOT_TOKEN"
    REDIS_HOST="127.0.0.1"
+   REDIS_PASSWORD="YOUR_REDIS_PASSWORD"
    REDIS_PORT="6379"
    REDIS_USERNAME="default"
-   REDIS_PASSWORD="YOUR_REDIS_PASSWORD"
-   DISCORD_BOT_TOKEN="YOUR_DISCORD_BOT_TOKEN"
-   DISCORD_BOT_ALLOWED_CHANNEL_NAME="YOUR_ALLOWED_CHANNEL_NAME"
+   PORT="3000"
    ```
-2. Replace the placeholder values with your actual credentials.
+2. Replace the placeholder values with your actual credentials. The `PORT` variable is for the health check server and defaults to 3000 if not provided.
 
 ## ▶️ Usage
 
@@ -39,11 +40,13 @@ This project is a Discord bot that triggers an external agent to do tasks users 
 
 ## 🧠 How it Works
 
-The bot listens for messages in a Discord channel. When a message is received, it's added as a task to a Redis stream named `discord:tasks`.
+This bot facilitates communication between Discord and an external agent using Redis streams for task queuing.
 
-An external agent (not included in this project) is expected to be listening to this stream. The agent processes the task and posts the result to another Redis stream named `discord:results`.
-
-The bot listens to the `discord:results` stream. When a result is received, it's posted back to the Discord channel where the original request was made.
+- **Message Creation**: When a user sends a message in the designated channel, the bot adds it to the `discord:requests` Redis stream.
+- **Message Deletion**: If a message is deleted, a corresponding deletion task is sent to the same stream.
+- **Agent Processing**: The [evanxd/expense-log-agent][1] external agent consumes tasks from the `discord:requests` stream, processes them, and publishes the results to the `discord:results` stream.
+- **Result Display**: The bot monitors the `discord:results` stream and posts any incoming results back to the Discord channel.
+- **Health Check**: A lightweight Express server runs a `/health` endpoint to allow for simple health checks in deployment environments.
 
 ## 🙌 Contributing
 
@@ -52,3 +55,5 @@ Contributions are welcome! Please feel free to submit a pull request.
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).
+
+[1]: https://github.com/evanxd/expense-log-agent
