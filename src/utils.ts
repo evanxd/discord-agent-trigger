@@ -201,7 +201,7 @@ async function* yieldResultsFromStream(
 }
 
 /**
- * Deletes a task and its result from the Redis streams.
+ * Deletes a task request and its result from the Redis streams.
  *
  * @param client - The Redis client instance.
  * @param requestId - The ID of the request message to delete.
