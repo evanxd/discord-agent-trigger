@@ -7,7 +7,7 @@ const XREAD_BLOCK_MS = 5000;
 const XREAD_COUNT = 10;
 const ERROR_RETRY_MS = 5000;
 
-interface TaskRequestMessage {
+interface RequestMessage {
   id: string;
   message: {
     requestId: string;
@@ -21,7 +21,7 @@ interface TaskRequestMessage {
   };
 }
 
-interface TaskResultMessage {
+interface ResultMessage {
   id: string;
   message: {
     result: string;
@@ -38,7 +38,7 @@ interface TaskResultMessage {
  * @returns A connected Redis client.
  * @throws Will throw an error if the initial connection fails.
  */
-export async function generateClient(options: RedisClientOptions): Promise<RedisClientType> {
+export async function createRedisClient(options: RedisClientOptions): Promise<RedisClientType> {
   const client = createClient(options);
   client.on("error", e => { throw e; });
   await client.connect();
@@ -46,21 +46,21 @@ export async function generateClient(options: RedisClientOptions): Promise<Redis
 }
 
 /**
- * Adds a new task to the tasks stream.
+ * Adds a new task request to the Redis stream.
  *
  * @param client - The Redis client instance.
  * @param message - The discord.js Message that triggered the task.
  * @param instruction - Optional instruction to override the message content.
  * @throws Throws an error if the task cannot be added or if the channel is not a TextChannel.
  */
-export async function addTask(client: RedisClientType, message: Message, instruction?: string): Promise<void> {
+export async function addRequestToStream(client: RedisClientType, message: Message, instruction?: string): Promise<void> {
   if (!(message.channel instanceof TextChannel)) {
     throw new Error("Tasks can only be initiated from server text channels.");
   }
 
   const { id: messageId, channel, channelId } = message;
   const requestId = `${Date.now()}-0`;
-  const request: TaskRequestMessage = {
+  const request: RequestMessage = {
     id: requestId,
     message: {
       requestId,
@@ -77,19 +77,19 @@ export async function addTask(client: RedisClientType, message: Message, instruc
 }
 
 /**
- * A long-running process that listens for results from the Redis results stream,
+ * A long-running process that listens for task results from the Redis results stream,
  * sends them to the appropriate Discord channel, and cleans up the processed tasks.
  *
  * @param discordClient - The Discord client instance.
  * @param resultClient - The Redis client for reading results.
  * @param taskClient - The Redis client for cleaning up tasks.
  */
-export async function listenForResults(
+export async function listenForRedisResults(
   discordClient: Client,
   resultClient: RedisClientType,
   taskClient: RedisClientType
 ) {
-  for await (const result of getResults(resultClient)) {
+  for await (const result of yieldResultsFromStream(resultClient)) {
     const { id: resultId, message: redisMessage } = result;
     const { result: resultText, channelId, messageId, requestId } = redisMessage;
     if (!channelId || !messageId || !requestId) {
@@ -111,7 +111,7 @@ export async function listenForResults(
       });
     }
 
-    const [err] = await to(cleanupProcessedTask(taskClient, requestId, resultId));
+    const [err] = await to(cleanupRequestAndResult(taskClient, requestId, resultId));
     if (err) {
       console.error(`Failed to cleanup Redis streams for request ${requestId} and result ${resultId}`, err);
     }
@@ -158,7 +158,7 @@ export function isInvalidMessage(message: Message): boolean {
  *
  * @param client - The Discord client instance.
  */
-export async function fetchMessages(client: Client): Promise<void> {
+export async function fetchDiscordMessages(client: Client): Promise<void> {
   const channel = client.channels.cache.find((c) =>
     c instanceof TextChannel &&
     c.name === process.env.DISCORD_BOT_ALLOWED_CHANNEL_NAME
@@ -167,14 +167,14 @@ export async function fetchMessages(client: Client): Promise<void> {
 }
 
 /**
- * An async generator that yields results from the results stream as they become available.
+ * An async generator that yields results from the Redis results stream as they become available.
  * It will block and wait for new messages, and automatically retries on error.
  *
  * @param client - The Redis client instance.
  */
-async function* getResults(
+async function* yieldResultsFromStream(
   client: RedisClientType
-): AsyncGenerator<TaskResultMessage> {
+): AsyncGenerator<ResultMessage> {
   let lastId = "0";
 
   while (true) {
@@ -193,7 +193,7 @@ async function* getResults(
 
     if (streams) {
       for (const message of streams[0].messages) {
-        yield message as TaskResultMessage;
+        yield message as ResultMessage;
         lastId = message.id;
       }
     }
@@ -201,13 +201,13 @@ async function* getResults(
 }
 
 /**
- * Deletes a task from the tasks stream and its corresponding result from the results stream.
+ * Deletes a task and its result from the Redis streams.
  *
  * @param client - The Redis client instance.
  * @param requestId - The ID of the request message to delete.
  * @param resultId - The ID of the result message to delete.
  */
-async function cleanupProcessedTask(
+async function cleanupRequestAndResult(
   client: RedisClientType,
   requestId: string,
   resultId: string

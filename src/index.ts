@@ -2,11 +2,11 @@ import { Client, GatewayIntentBits, Message, TextChannel } from "discord.js";
 import dotenv from "dotenv";
 
 import {
-  addTask,
-  fetchMessages,
-  generateClient,
+  addRequestToStream,
+  fetchDiscordMessages,
+  createRedisClient,
   isInvalidMessage,
-  listenForResults,
+  listenForRedisResults,
   to,
 } from "./utils.js";
 import { startServer } from "./server.js";
@@ -23,8 +23,8 @@ const REDIS_OPTIONS = {
 };
 
 async function main() {
-  const redisRequestClient = await generateClient(REDIS_OPTIONS);
-  const redisResultClient = await generateClient(REDIS_OPTIONS);
+  const redisRequestClient = await createRedisClient(REDIS_OPTIONS);
+  const redisResultClient = await createRedisClient(REDIS_OPTIONS);
   const discordClient = new Client({
     intents: [
       GatewayIntentBits.Guilds,
@@ -34,8 +34,8 @@ async function main() {
   });
 
   discordClient.once("clientReady", async (client) => {
-    await fetchMessages(client);
-    const [err] = await to(listenForResults(client, redisResultClient, redisRequestClient));
+    await fetchDiscordMessages(client);
+    const [err] = await to(listenForRedisResults(client, redisResultClient, redisRequestClient));
 
     if (err) {
       console.error("Error in result listening loop:", err);
@@ -48,7 +48,7 @@ async function main() {
     }
 
     const [err] = await to(
-      addTask(redisRequestClient, message).then(() => message.react("🤖"))
+      addRequestToStream(redisRequestClient, message).then(() => message.react("🤖"))
     );
 
     if (err) {
@@ -63,7 +63,7 @@ async function main() {
     }
 
     const [err] = await to(
-      addTask(redisRequestClient, message, "Delete this expense log")
+      addRequestToStream(redisRequestClient, message, "Delete this expense log")
     );
 
     if (err) {
