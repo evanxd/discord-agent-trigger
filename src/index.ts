@@ -1,30 +1,23 @@
-import { Client, GatewayIntentBits, Message, TextChannel } from "discord.js";
+import { Client, GatewayIntentBits, Message } from "discord.js";
 import dotenv from "dotenv";
 
 import {
   addRequestToStream,
-  fetchDiscordMessages,
   createRedisClient,
-  isInvalidMessage,
   listenForRedisResults,
+} from "./redis.js"
+import {
+  fetchDiscordMessages,
+  isInvalidMessage,
   to,
 } from "./utils.js";
 import { startServer } from "./server.js";
 
 dotenv.config();
 
-const REDIS_OPTIONS = {
-  username: process.env.REDIS_USERNAME,
-  password: process.env.REDIS_PASSWORD,
-  socket: {
-    host: process.env.REDIS_HOST,
-    port: Number(process.env.REDIS_PORT),
-  },
-};
-
 async function main() {
-  const redisRequestClient = await createRedisClient(REDIS_OPTIONS);
-  const redisResultClient = await createRedisClient(REDIS_OPTIONS);
+  const redisRequestClient = await createRedisClient();
+  const redisResultClient = await createRedisClient();
   const discordClient = new Client({
     intents: [
       GatewayIntentBits.Guilds,
@@ -75,5 +68,5 @@ async function main() {
   await discordClient.login(process.env.DISCORD_BOT_TOKEN);
 }
 
-startServer(Number(process.env.PORT) || undefined);
+startServer(Number(process.env.PORT));
 main().catch((e) => { console.error("Unhandled error:", e); });

@@ -5,7 +5,7 @@
   "main": "dis/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "node --require dotenv/config dist/index.js"
   },
   "keywords": [
     "discord",

@@ -24,8 +24,10 @@ This project is a Discord bot that triggers an external agent to do tasks users 
    REDIS_PORT="6379"
    REDIS_USERNAME="default"
    PORT="3000"
+   STREAM_REQUESTS="discord:requests"
+   STREAM_RESULTS="discord:results"
    ```
-2. Replace the placeholder values with your actual credentials. The `PORT` variable is for the health check server and defaults to 3000 if not provided.
+2. Replace the placeholder values with your actual credentials. The `PORT` variable is for the health check server and defaults to 3000 if not provided. The `STREAM_REQUESTS` and `STREAM_RESULTS` variables are for the Redis streams and default to `discord:requests` and `discord:results` respectively.
 
 ## ▶️ Usage
 
