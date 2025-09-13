@@ -29,7 +29,11 @@ export async function fetchDiscordMessages(client: Client): Promise<void> {
     c instanceof TextChannel &&
     c.name === process.env.DISCORD_BOT_ALLOWED_CHANNEL_NAME
   );
-  await (channel as TextChannel).messages.fetch();
+  if (channel && channel instanceof TextChannel) {
+    channel.messages.fetch();
+  } else {
+    throw Error("Could not find the specified channel.");
+  }
 }
 
 /**
