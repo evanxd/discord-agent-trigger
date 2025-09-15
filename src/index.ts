@@ -41,7 +41,7 @@ async function main() {
     }
 
     const [err] = await to(
-      addRequestToStream(redisRequestClient, message).then(() => message.react("🤖"))
+      addRequestToStream(redisRequestClient, "messageCreate", message).then(() => message.react("🤖"))
     );
 
     if (err) {
@@ -56,7 +56,7 @@ async function main() {
     }
 
     const [err] = await to(
-      addRequestToStream(redisRequestClient, message, "Delete this expense log")
+      addRequestToStream(redisRequestClient, "messageDelete", message, "Delete this expense log")
     );
 
     if (err) {

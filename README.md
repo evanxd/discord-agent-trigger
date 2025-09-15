@@ -44,10 +44,11 @@ This project is a Discord bot that triggers an external agent to do tasks users 
 
 This bot facilitates communication between Discord and an external agent using Redis streams for task queuing.
 
-- **Message Creation**: When a user sends a message in the designated channel, the bot adds it to the `discord:requests` Redis stream.
-- **Message Deletion**: If a message is deleted, a corresponding deletion task is sent to the same stream.
-- **Agent Processing**: The [evanxd/expense-log-agent][1] external agent consumes tasks from the `discord:requests` stream, processes them, and publishes the results to the `discord:results` stream.
-- **Result Display**: The bot monitors the `discord:results` stream and posts any incoming results back to the Discord channel.
+- **Message Creation**: When a user sends a message in the designated channel, the bot reacts with a '🤖' emoji and adds a task to the `discord:requests` Redis stream.
+- **Message Deletion**: If a message is deleted, a corresponding `messageDelete` message is sent to the same stream.
+- **Agent Processing**: An external agent (like [evanxd/expense-log-agent][1]) consumes tasks from the `discord:requests` stream. After processing, the agent publishes the results to the `discord:results` stream.
+- **Result Handling**: The bot monitors the `discord:results` stream. When a result is received, it posts the result as a reply to the original message in the Discord channel.
+- **Stream Cleanup**: After a result is successfully processed and posted to Discord, the corresponding request and result messages are deleted from their respective Redis streams to prevent reprocessing and save memory.
 - **Health Check**: A lightweight Express server runs a `/health` endpoint to allow for simple health checks in deployment environments.
 
 ## 🙌 Contributing
