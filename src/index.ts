@@ -55,9 +55,7 @@ async function main() {
       return;
     }
 
-    const [err] = await to(
-      addRequestToStream(redisRequestClient, "messageDelete", message, "Delete this expense log")
-    );
+    const [err] = await to(addRequestToStream(redisRequestClient, "messageDelete", message));
 
     if (err) {
       console.error("Failed to add deletion task:", err);
