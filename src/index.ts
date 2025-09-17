@@ -41,7 +41,7 @@ async function main() {
     }
 
     const [err] = await to(
-      addRequestToStream(redisRequestClient, "messageCreate", message).then(() => message.react("🤖"))
+      addRequestToStream(redisRequestClient, "messageCreate", message).then(() => message.react("🐾"))
     );
 
     if (err) {
