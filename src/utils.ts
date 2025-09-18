@@ -1,4 +1,4 @@
-import { Client, Message, TextChannel } from "discord.js";
+import { Client, Message, PartialMessage, TextChannel } from "discord.js";
 
 /**
  * Wraps a promise to enable error handling without a try-catch block,
@@ -25,15 +25,15 @@ export function to<T>(promise: Promise<T>): Promise<[Error, undefined] | [null, 
  * @param client - The Discord client instance.
  */
 export async function fetchDiscordMessages(client: Client): Promise<void> {
-  const channel = client.channels.cache.find((c) =>
-    c instanceof TextChannel &&
-    c.name === process.env.DISCORD_BOT_ALLOWED_CHANNEL_NAME
-  );
-  if (channel && channel instanceof TextChannel) {
-    channel.messages.fetch();
-  } else {
-    throw Error("Could not find the specified channel.");
-  }
+  client.channels.cache.forEach(channel => {
+    if (
+      channel instanceof TextChannel &&
+      !isPublicChannel(channel) &&
+      canView(channel)
+    ) {
+      channel.messages.fetch();
+    }
+  });
 }
 
 /**
@@ -44,10 +44,31 @@ export async function fetchDiscordMessages(client: Client): Promise<void> {
  * @param message - The Discord message to check.
  * @returns True if the message is invalid, false otherwise.
  */
-export function isInvalidMessage(message: Message): boolean {
+export function isInvalidMessage(message: Message | PartialMessage): boolean {
   return (
-    message.author.bot ||
+    !(message instanceof Message) ||
     !(message.channel instanceof TextChannel) ||
-    message.channel.name !== process.env.DISCORD_BOT_ALLOWED_CHANNEL_NAME
+    message.author.bot ||
+    isPublicChannel(message.channel)
   );
+}
+
+/**
+ * Checks if the bot has permission to view a channel.
+ *
+ * @param channel - The channel to check.
+ * @returns True if the bot can view the channel, false otherwise.
+ */
+function canView(channel: TextChannel): boolean {
+  return channel.permissionsFor(channel.guild.members.me!).has("ViewChannel");
+}
+
+/**
+ * Checks if a channel is public (viewable by @everyone).
+ *
+ * @param channel - The channel to check.
+ * @returns True if the channel is public, false otherwise.
+ */
+function isPublicChannel(channel: TextChannel): boolean {
+  return channel.permissionsFor(channel.guild.roles.everyone).has("ViewChannel");
 }

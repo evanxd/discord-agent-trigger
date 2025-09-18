@@ -17,7 +17,6 @@ This project is a Discord bot that triggers an external agent to do tasks users 
 
 1. Create a `.env` file in the root of the project with the following content:
    ```
-   DISCORD_BOT_ALLOWED_CHANNEL_NAME="YOUR_ALLOWED_CHANNEL_NAME"
    DISCORD_BOT_TOKEN="YOUR_DISCORD_BOT_TOKEN"
    REDIS_HOST="127.0.0.1"
    REDIS_PASSWORD="YOUR_REDIS_PASSWORD"

@@ -51,11 +51,13 @@ async function main() {
   });
 
   discordClient.on("messageDelete", async (message) => {
-    if (!(message instanceof Message) || isInvalidMessage(message)) {
+    if (isInvalidMessage(message)) {
       return;
     }
 
-    const [err] = await to(addRequestToStream(redisRequestClient, "messageDelete", message));
+    const [err] = await to(
+      addRequestToStream(redisRequestClient, "messageDelete", message as Message)
+    );
 
     if (err) {
       console.error("Failed to add deletion task:", err);
