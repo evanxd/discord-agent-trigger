@@ -28,7 +28,7 @@ export async function fetchDiscordMessages(client: Client): Promise<void> {
   client.channels.cache.forEach(channel => {
     if (
       channel instanceof TextChannel &&
-      !isPublicChannel(channel) &&
+      !isPublic(channel) &&
       canView(channel)
     ) {
       channel.messages.fetch();
@@ -49,7 +49,7 @@ export function isInvalidMessage(message: Message | PartialMessage): boolean {
     !(message instanceof Message) ||
     !(message.channel instanceof TextChannel) ||
     message.author.bot ||
-    isPublicChannel(message.channel)
+    isPublic(message.channel)
   );
 }
 
@@ -69,6 +69,6 @@ function canView(channel: TextChannel): boolean {
  * @param channel - The channel to check.
  * @returns True if the channel is public, false otherwise.
  */
-function isPublicChannel(channel: TextChannel): boolean {
+function isPublic(channel: TextChannel): boolean {
   return channel.permissionsFor(channel.guild.roles.everyone).has("ViewChannel");
 }
