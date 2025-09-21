@@ -8,7 +8,7 @@ import { Client, Message, PartialMessage, TextChannel } from "discord.js";
  * @param client - The Discord client instance.
  */
 export async function fetchDiscordMessages(client: Client): Promise<void> {
-  client.channels.cache.forEach(channel => {
+  client.channels.cache.forEach((channel) => {
     if (
       channel instanceof TextChannel &&
       !isPublic(channel) &&
@@ -53,5 +53,7 @@ function canView(channel: TextChannel): boolean {
  * @returns True if the channel is public, false otherwise.
  */
 function isPublic(channel: TextChannel): boolean {
-  return channel.permissionsFor(channel.guild.roles.everyone).has("ViewChannel");
+  return channel
+    .permissionsFor(channel.guild.roles.everyone)
+    .has("ViewChannel");
 }

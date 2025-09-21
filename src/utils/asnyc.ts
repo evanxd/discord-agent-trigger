@@ -9,7 +9,9 @@
  *          promise resolves, the tuple is `[null, data]`. If it rejects,
  *          the tuple is `[error, undefined]`.
  */
-export function to<T>(promise: Promise<T>): Promise<[Error, undefined] | [null, T]> {
+export function to<T>(
+  promise: Promise<T>,
+): Promise<[Error, undefined] | [null, T]> {
   return promise
     .then<[null, T]>((data) => [null, data])
     .catch<[Error, undefined]>((err) => [err, undefined]);

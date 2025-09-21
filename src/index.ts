@@ -1,16 +1,13 @@
 import { Client, GatewayIntentBits, Message } from "discord.js";
 import dotenv from "dotenv";
 
-import { to } from "./utils/asnyc.js"
-import {
-  fetchDiscordMessages,
-  isInvalidMessage,
-} from "./utils/discord.js";
+import { to } from "./utils/asnyc.js";
+import { fetchDiscordMessages, isInvalidMessage } from "./utils/discord.js";
 import {
   addRequestToStream,
   createRedisClient,
   listenForRedisResults,
-} from "./utils/redis.js"
+} from "./utils/redis.js";
 import { startServer } from "./utils/server.js";
 
 dotenv.config();
@@ -23,12 +20,14 @@ async function main() {
       GatewayIntentBits.Guilds,
       GatewayIntentBits.GuildMessages,
       GatewayIntentBits.MessageContent,
-    ]
+    ],
   });
 
   discordClient.once("clientReady", async (client) => {
     await fetchDiscordMessages(client);
-    const [err] = await to(listenForRedisResults(client, redisResultClient, redisRequestClient));
+    const [err] = await to(
+      listenForRedisResults(client, redisResultClient, redisRequestClient),
+    );
 
     if (err) {
       console.error("Error in result listening loop:", err);
@@ -41,7 +40,9 @@ async function main() {
     }
 
     const [err] = await to(
-      addRequestToStream(redisRequestClient, "messageCreate", message).then(() => message.react("🐾"))
+      addRequestToStream(redisRequestClient, "messageCreate", message).then(
+        () => message.react("🐾"),
+      ),
     );
 
     if (err) {
@@ -56,12 +57,18 @@ async function main() {
     }
 
     const [err] = await to(
-      addRequestToStream(redisRequestClient, "messageDelete", message as Message)
+      addRequestToStream(
+        redisRequestClient,
+        "messageDelete",
+        message as Message,
+      ),
     );
 
     if (err) {
       console.error("Failed to add deletion task:", err);
-      await message.channel.send(`Could not process the deletion request: ${err.message}`);
+      await message.channel.send(
+        `Could not process the deletion request: ${err.message}`,
+      );
     }
   });
 
@@ -69,4 +76,6 @@ async function main() {
 }
 
 startServer(Number(process.env.PORT));
-main().catch((e) => { console.error("Unhandled error:", e); });
+main().catch((e) => {
+  console.error("Unhandled error:", e);
+});
