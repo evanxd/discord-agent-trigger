@@ -31,6 +31,7 @@ async function main() {
   discordClient.once("clientReady", async (client) => {
     await fetchDiscordMembers(client);
     await fetchDiscordMessages(client);
+
     const [err] = await to(
       listenForRedisResults(client, redisResultClient, redisRequestClient),
     );
