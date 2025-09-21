@@ -1,7 +1,7 @@
 import { createClient, RedisClientType } from "redis";
 import { Client, Message, TextChannel } from "discord.js";
 
-import { to } from "./utils.js"
+import { to } from "./asnyc.js"
 
 const ERROR_RETRY_MS = 5000;
 const REDIS_OPTIONS = {

@@ -1,17 +1,17 @@
 import { Client, GatewayIntentBits, Message } from "discord.js";
 import dotenv from "dotenv";
 
+import { to } from "./utils/asnyc.js"
+import {
+  fetchDiscordMessages,
+  isInvalidMessage,
+} from "./utils/discord.js";
 import {
   addRequestToStream,
   createRedisClient,
   listenForRedisResults,
-} from "./redis.js"
-import {
-  fetchDiscordMessages,
-  isInvalidMessage,
-  to,
-} from "./utils.js";
-import { startServer } from "./server.js";
+} from "./utils/redis.js"
+import { startServer } from "./utils/server.js";
 
 dotenv.config();
 
