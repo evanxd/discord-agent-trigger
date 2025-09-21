@@ -85,7 +85,11 @@ export async function addRequestToStream(
       event,
       instruction: instruction || message.content,
       sender: message.author.username,
-      groupMembers: JSON.stringify(channel.members.map((m) => m.user.username)),
+      groupMembers: JSON.stringify(
+        channel.members
+          .filter((m) => m.user.id !== message.client.user.id)
+          .map((m) => m.user.username),
+      ),
       ledgerId: `discord:${channelId}`,
       channelId,
       messageId,
