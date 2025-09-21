@@ -8,15 +8,17 @@ import { Client, Message, PartialMessage, TextChannel } from "discord.js";
  * @param client - The Discord client instance.
  */
 export async function fetchDiscordMessages(client: Client): Promise<void> {
-  client.channels.cache.forEach((channel) => {
-    if (
-      channel instanceof TextChannel &&
-      !isPublic(channel) &&
-      canView(channel)
-    ) {
-      channel.messages.fetch();
-    }
-  });
+  await Promise.all(
+    client.channels.cache.map((channel) => {
+      if (
+        channel instanceof TextChannel &&
+        !isPublic(channel) &&
+        canView(channel)
+      ) {
+        return channel.messages.fetch();
+      }
+    }),
+  );
 }
 
 /**
