@@ -1,6 +1,15 @@
 import { Client, Message, PartialMessage, TextChannel } from "discord.js";
 
 /**
+ * Fetches all members from all guilds to ensure they are in the cache.
+ *
+ * @param client - The Discord client instance.
+ */
+export async function fetchDiscordMembers(client: Client): Promise<void> {
+  await Promise.all(client.guilds.cache.map((guild) => guild.members.fetch()));
+}
+
+/**
  * Fetches all messages from the allowed channel to ensure they are in the cache.
  * This is useful for making sure that the bot can react to messages that were sent
  * while it was offline.

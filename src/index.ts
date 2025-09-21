@@ -2,7 +2,11 @@ import { Client, GatewayIntentBits, Message } from "discord.js";
 import dotenv from "dotenv";
 
 import { to } from "./utils/asnyc.js";
-import { fetchDiscordMessages, isInvalidMessage } from "./utils/discord.js";
+import {
+  fetchDiscordMembers,
+  fetchDiscordMessages,
+  isInvalidMessage,
+} from "./utils/discord.js";
 import {
   addRequestToStream,
   createRedisClient,
@@ -18,12 +22,14 @@ async function main() {
   const discordClient = new Client({
     intents: [
       GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMembers,
       GatewayIntentBits.GuildMessages,
       GatewayIntentBits.MessageContent,
     ],
   });
 
   discordClient.once("clientReady", async (client) => {
+    await fetchDiscordMembers(client);
     await fetchDiscordMessages(client);
     const [err] = await to(
       listenForRedisResults(client, redisResultClient, redisRequestClient),
