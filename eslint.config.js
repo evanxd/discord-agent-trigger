@@ -40,15 +40,4 @@ export default [
       "prettier/prettier": "error",
     },
   },
-  {
-    files: ["src/**/*.js", "src/**/*.jsx"],
-    ignores: ["node_modules/**", "dist/**"],
-    plugins: {
-      prettier: prettierPlugin,
-    },
-    rules: {
-      ...prettierConfig.rules,
-      "prettier/prettier": "error",
-    },
-  },
 ];
