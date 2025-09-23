@@ -18,7 +18,7 @@ import {
   fetchDiscordMembers,
   fetchDiscordMessages,
   isInvalidMessage,
-} from "../src/utils/discord.js";
+} from "../../src/utils/discord.js";
 
 const createMockTextChannel = (
   isPublic: boolean,
