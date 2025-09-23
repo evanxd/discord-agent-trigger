@@ -39,7 +39,7 @@ This project is a Discord bot that triggers an external agent to do tasks users 
    npm run start
    ```
 
-## 🔬 Development
+## 💻 Development
 
 ### Linting
 
