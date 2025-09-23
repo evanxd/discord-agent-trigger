@@ -4,5 +4,6 @@
     "declaration": true,
     "outDir": "./dist"
   },
-  "include": ["src/**/*.ts"]
+  "isolatedModules": true,
+  "include": ["src/**/*.ts", "__tests__/**/*.ts"]
 }
