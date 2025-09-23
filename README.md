@@ -39,6 +39,30 @@ This project is a Discord bot that triggers an external agent to do tasks users 
    npm run start
    ```
 
+## 🔬 Development
+
+### Linting
+
+This project uses ESLint for code linting. To check for linting errors, run:
+
+```bash
+npm run lint
+```
+
+To automatically fix linting errors, run:
+
+```bash
+npm run lint:fix
+```
+
+### Testing
+
+This project uses Jest for testing. To run the tests, use the following command:
+
+```bash
+npm run test
+```
+
 ## 🧠 How it Works
 
 This bot facilitates communication between Discord and an external agent using Redis streams for task queuing.
