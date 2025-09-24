@@ -179,7 +179,7 @@ async function* yieldResultsFromStream(
       continue;
     }
 
-    if (streams) {
+    if (streams && streams.length > 0) {
       for (const message of streams[0].messages) {
         yield message as ResultMessage;
         lastId = message.id;
