@@ -126,7 +126,7 @@ export async function listenForRedisResults(
 
     const channel = await discordClient.channels.fetch(channelId);
     if (!(channel instanceof TextChannel)) {
-      return;
+      continue;
     }
 
     if (resultText) {
