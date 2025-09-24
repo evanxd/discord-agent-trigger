@@ -2,7 +2,8 @@
   "name": "discord-agent-trigger",
   "version": "1.0.0",
   "description": "A Discord bot that triggers an external agent to do tasks users request.",
-  "main": "dis/index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "lint": "eslint src __tests__ --ext .ts,.tsx",
