@@ -34,7 +34,7 @@ jest.mock("discord.js", () => ({
   },
 }));
 
-const getListener = (mock: jest.Mock, event: string) => {
+const getMockListener = (mock: jest.Mock, event: string) => {
   const call = mock.mock.calls.find((c) => c[0] === event);
   return call ? call[1] : undefined;
 };
@@ -51,10 +51,10 @@ describe("main", () => {
 
   describe("clientReady event", () => {
     it("should setup client ready listener, trigger it, and call the correct functions", async () => {
-      const readyCallback = getListener(mockOnce, "clientReady");
-      expect(readyCallback).toBeDefined();
+      const callback = getMockListener(mockOnce, "clientReady");
+      expect(callback).toBeDefined();
 
-      await readyCallback(mockClientInstance);
+      await callback(mockClientInstance);
 
       expect(mockFetchDiscordMembers).toHaveBeenCalledTimes(1);
       expect(mockFetchDiscordMessages).toHaveBeenCalledTimes(1);
