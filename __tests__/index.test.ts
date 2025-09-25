@@ -1,4 +1,4 @@
-import { Client, Message } from "discord.js";
+import { Client, Message, TextChannel } from "discord.js";
 
 const mockFetchDiscordMembers = jest.fn();
 const mockFetchDiscordMessages = jest.fn();
@@ -117,6 +117,58 @@ describe("main", () => {
 
       expect(message.reply).toHaveBeenCalledWith(
         `Could not process your request: ${errorMessage}`,
+      );
+      expect(consoleErrorSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe("messageDelete event", () => {
+    it("should ignore invalid messages", async () => {
+      mockIsInvalidMessage.mockReturnValue(true);
+      const callback = getMockListener(mockClientInstance.on, "messageDelete");
+      expect(callback).toBeDefined();
+
+      const message = {} as Message;
+
+      await callback(message);
+
+      expect(mockAddRequestToStream).not.toHaveBeenCalled();
+    });
+
+    it("should process valid messages", async () => {
+      mockIsInvalidMessage.mockReturnValue(false);
+      mockAddRequestToStream.mockResolvedValue(undefined);
+      const callback = getMockListener(mockClientInstance.on, "messageDelete");
+      expect(callback).toBeDefined();
+
+      const message = {} as Message;
+
+      await callback(message);
+
+      expect(mockAddRequestToStream).toHaveBeenCalledWith(
+        undefined,
+        "messageDelete",
+        message,
+      );
+    });
+
+    it("should handle errors when processing a message", async () => {
+      mockIsInvalidMessage.mockReturnValue(false);
+      const errorMessage = "Redis is down";
+      mockAddRequestToStream.mockRejectedValue(new Error(errorMessage));
+      const callback = getMockListener(mockClientInstance.on, "messageDelete");
+      expect(callback).toBeDefined();
+
+      const message = {
+        channel: {
+          send: jest.fn(),
+        },
+      } as unknown as Message;
+
+      await callback(message);
+
+      expect((message.channel as TextChannel).send).toHaveBeenCalledWith(
+        `Could not process the deletion request: ${errorMessage}`,
       );
       expect(consoleErrorSpy).toHaveBeenCalled();
     });
