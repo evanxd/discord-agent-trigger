@@ -66,6 +66,21 @@ describe("main", () => {
       expect(mockFetchDiscordMessages).toHaveBeenCalledTimes(1);
       expect(mockListenForRedisResults).toHaveBeenCalledTimes(1);
     });
+
+    it("should handle errors in the result listening loop", async () => {
+      const errorMessage = "Redis results error";
+      mockListenForRedisResults.mockRejectedValue(new Error(errorMessage));
+      const callback = getMockListener(mockClientInstance.once, "clientReady");
+      expect(callback).toBeDefined();
+
+      await callback(mockClientInstance);
+
+      expect(mockListenForRedisResults).toHaveBeenCalledTimes(1);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Error in result listening loop:",
+        new Error(errorMessage),
+      );
+    });
   });
 
   describe("messageCreate event", () => {
